@@ -1,0 +1,50 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("POSTGRES_PRISMA_URL")
+}
+
+model City {
+  id     Int     @id @default(autoincrement())
+  name   String  @unique
+  guests Guest[]
+
+  @@index([name])
+}
+
+model Category {
+  id    Int     @id @default(autoincrement())
+  name  String  @unique
+  type  String  @default("checkbox")
+
+  checks Check[]
+}
+
+model Guest {
+  id        Int     @id @default(autoincrement())
+  name      String
+  cityId    Int?
+  city      City?   @relation(fields: [cityId], references: [id])
+  checks    Check[]
+
+  createdAt DateTime @default(now())
+  @@index([name])
+  @@index([cityId])
+}
+
+model Check {
+  id          Int     @id @default(autoincrement())
+  guestId     Int
+  categoryId  Int
+  checked     Boolean @default(false)
+  updatedAt   DateTime @updatedAt
+
+  guest     Guest    @relation(fields: [guestId], references: [id], onDelete: Cascade)
+  category  Category @relation(fields: [categoryId], references: [id], onDelete: Cascade)
+
+  @@unique([guestId, categoryId])
+  @@index([categoryId])
+}

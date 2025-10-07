@@ -1,5 +1,5 @@
 {
-  "name": "weddingplanner",
+  "name": "my-v0-project",
   "version": "0.1.0",
   "private": true,
   "scripts": {
@@ -58,7 +58,11 @@
     "sonner": "^1.7.4",
     "tailwind-merge": "^3.3.1",
     "tailwindcss-animate": "^1.0.7",
-    "zod": "3.25.67"
+    "vaul": "^0.9.9",
+    "zod": "3.25.67",
+    "@neondatabase/serverless": "1.0.2",
+    "zustand": "5.0.8",
+    "@prisma/client": "6.16.3"
   },
   "devDependencies": {
     "@tailwindcss/postcss": "^4.1.9",

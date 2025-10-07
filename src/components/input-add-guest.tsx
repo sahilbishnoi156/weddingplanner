@@ -29,13 +29,13 @@ export function AddGuestInput({
   suggestCities,
 }: {
   cities: City[]
-  onCreateGuest: (name: string, cityIds: string[]) => void
-  onCreateCity: (name: string) => City | null
+  onCreateGuest: (name: string, cityId: number | null) => void
+  onCreateCity: (name: string) => Promise<City | null> | City | null
   findCityByExactToken: (token: string) => City | null
   suggestCities: (partial: string) => City[]
 }) {
   const [value, setValue] = React.useState("")
-  const [pendingCities, setPendingCities] = React.useState<City[]>([])
+  const [pendingCity, setPendingCity] = React.useState<City | null>(null)
   const [open, setOpen] = React.useState(false)
   const [highlight, setHighlight] = React.useState(0)
 
@@ -50,24 +50,22 @@ export function AddGuestInput({
   }, [currentPartial, suggestCities, cities])
 
   const attachCity = (city: City) => {
-    if (pendingCities.some((c) => c.id === city.id)) return
-    setPendingCities((prev) => [...prev, city])
+    setPendingCity(city)
     if (currentPartial) {
       const nextInput = removeLastWord(value).trimStart()
       setValue(nextInput.length ? nextInput + " " : "")
     }
   }
 
-  const createCityFromPartial = () => {
+  const createCityFromPartial = async () => {
     const name = currentPartial.trim()
     if (!name) return
-    const created = onCreateCity(name)
+    const created = await onCreateCity(name)
     if (created) attachCity(created)
   }
 
-  const onKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+  const onKeyDown = async (e: React.KeyboardEvent<HTMLInputElement>) => {
     if (e.key === " " || e.key === "Spacebar") {
-      // space confirms exact city token
       const token = currentPartial.trim()
       const exact = findCityByExactToken(token)
       if (exact) {
@@ -78,43 +76,29 @@ export function AddGuestInput({
     }
     if (open && (e.key === "ArrowDown" || e.key === "ArrowUp")) {
       e.preventDefault()
-      const len = suggestions.length + 1 // +1 for "create" option potentially
-      setHighlight((h) => {
-        const max = createOptionVisible(currentPartial, suggestions) ? suggestions.length : suggestions.length - 1
-        const baseMax = Math.max(max, 0)
-        if (e.key === "ArrowDown") return Math.min(h + 1, baseMax)
-        return Math.max(h - 1, 0)
-      })
+      const hasCreate = createOptionVisible(currentPartial, suggestions)
+      const max = Math.max((hasCreate ? suggestions.length : suggestions.length) - 1, 0)
+      setHighlight((h) => (e.key === "ArrowDown" ? Math.min(h + 1, max) : Math.max(h - 1, 0)))
       return
     }
     if (e.key === "Enter") {
       const token = currentPartial.trim()
-      // if suggestion list open, accept highlighted option
       if (open) {
         e.preventDefault()
         if (suggestions[highlight]) {
           attachCity(suggestions[highlight])
           return
         }
-        // maybe create new city
         if (createOptionVisible(token, suggestions)) {
-          createCityFromPartial()
+          await createCityFromPartial()
           return
         }
       }
-      // otherwise create guest
       const name = value.trim()
-      if (name.length === 0 && pendingCities.length > 0) {
-        // allow creating an entry even if only cities were tagged; name empty is not helpful — ignore
-        return
-      }
       if (name) {
-        onCreateGuest(
-          name,
-          pendingCities.map((c) => c.id),
-        )
+        onCreateGuest(name, pendingCity ? pendingCity.id : null)
         setValue("")
-        setPendingCities([])
+        setPendingCity(null)
       }
     }
     if (e.key === "Escape") {
@@ -122,19 +106,12 @@ export function AddGuestInput({
     }
   }
 
-  const removeCity = (id: string) => {
-    setPendingCities((prev) => prev.filter((c) => c.id !== id))
-  }
-
   const doCreate = () => {
     const name = value.trim()
     if (!name) return
-    onCreateGuest(
-      name,
-      pendingCities.map((c) => c.id),
-    )
+    onCreateGuest(name, pendingCity ? pendingCity.id : null)
     setValue("")
-    setPendingCities([])
+    setPendingCity(null)
   }
 
   return (
@@ -142,18 +119,18 @@ export function AddGuestInput({
       <div className="flex items-center gap-2">
         <div className="flex min-w-0 flex-1 items-center gap-2 rounded-md border bg-background px-2 py-1.5">
           <div className="flex flex-wrap items-center gap-1.5">
-            {pendingCities.map((city) => (
-              <Badge key={city.id} variant="secondary" className="flex items-center gap-1">
-                {city.name}
+            {pendingCity && (
+              <Badge key={pendingCity.id} variant="secondary" className="flex items-center gap-1">
+                {pendingCity.name}
                 <button
                   className="rounded p-0.5 hover:bg-muted"
-                  onClick={() => removeCity(city.id)}
-                  aria-label={`Remove city ${city.name}`}
+                  onClick={() => setPendingCity(null)}
+                  aria-label={`Remove city ${pendingCity.name}`}
                 >
                   ×
                 </button>
               </Badge>
-            ))}
+            )}
           </div>
           <Input
             className={cn("border-0 shadow-none focus-visible:ring-0")}
@@ -174,10 +151,8 @@ export function AddGuestInput({
         </Button>
       </div>
 
-      {/* Suggestions */}
       {open && (
         <div className="absolute left-0 right-0 z-10 mt-1 rounded-md border bg-popover p-1 shadow-sm">
-          {/* city suggestions */}
           {suggestions.map((c, idx) => (
             <button
               key={c.id}
@@ -194,16 +169,15 @@ export function AddGuestInput({
               Add city label: <span className="font-medium">{c.name}</span>
             </button>
           ))}
-          {/* create city option */}
           {createOptionVisible(currentPartial, suggestions) && (
             <button
               className={cn(
                 "w-full rounded px-2 py-1.5 text-left text-sm hover:bg-muted",
                 suggestions.length === 0 && "bg-muted",
               )}
-              onMouseDown={(e) => {
+              onMouseDown={async (e) => {
                 e.preventDefault()
-                createCityFromPartial()
+                await createCityFromPartial()
               }}
             >
               Create and label city: <span className="font-medium">{currentPartial.trim()}</span>

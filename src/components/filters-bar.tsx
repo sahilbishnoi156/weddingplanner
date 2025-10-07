@@ -1,7 +1,7 @@
 "use client"
 
 import * as React from "react"
-import type { City, CategoryColumn, ID } from "@/lib/types"
+import type { City, Category, ID } from "@/lib/types"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { Checkbox } from "@/components/ui/checkbox"
@@ -19,13 +19,12 @@ export function FiltersBar({
   onColumnFiltersChange,
 }: {
   cities: City[]
-  categories: CategoryColumn[]
+  categories: Category[]
   cityFilter: Set<ID>
   onCityFilterChange: (v: Set<ID>) => void
   columnFilters: Record<ID, ColumnFilterState>
   onColumnFiltersChange: (v: Record<ID, ColumnFilterState>) => void
 }) {
-  // City multi-select tags
   const [openCities, setOpenCities] = React.useState(false)
 
   const toggleCity = (id: ID) => {
@@ -39,7 +38,6 @@ export function FiltersBar({
 
   return (
     <div className="flex flex-col gap-3 md:flex-row md:items-start">
-      {/* City filter */}
       <div className="relative">
         <Button
           variant="outline"
@@ -88,7 +86,6 @@ export function FiltersBar({
         )}
       </div>
 
-      {/* Selected city tags */}
       <div className="flex flex-wrap gap-2">
         {Array.from(cityFilter).map((id) => {
           const c = cities.find((x) => x.id === id)
@@ -112,19 +109,18 @@ export function FiltersBar({
         })}
       </div>
 
-      {/* Column filters */}
       <div className="flex flex-wrap gap-2">
         {categories.map((col) => {
           const val = columnFilters[col.id] || "any"
           return (
             <div key={col.id} className="flex items-center gap-1">
-              <span className="text-sm text-muted-foreground">{col.label}:</span>
+              <span className="text-sm text-muted-foreground">{col.name}:</span>
               <select
                 className={cn(
                   "h-8 rounded-md border bg-background px-2 text-sm",
                   "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
                 )}
-                aria-label={`${col.label} filter`}
+                aria-label={`${col.name} filter`}
                 value={val}
                 onChange={(e) =>
                   onColumnFiltersChange({ ...columnFilters, [col.id]: e.target.value as ColumnFilterState })

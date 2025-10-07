@@ -1,27 +1,39 @@
-export type ID = string
+export type ID = number
 
-export type ColumnType = "checkbox" | "text" // text is optional/future
+export type ColumnType = "checkbox" | "text"
 
 export interface City {
-  id: ID
+  id: number
   name: string
 }
 
-export interface CategoryColumn {
-  id: ID
-  label: string
+export interface Category {
+  id: number
+  name: string
   type: ColumnType
 }
 
 export interface Guest {
-  id: ID
+  id: number
   name: string
-  cityIds: ID[]
-  values: Record<ID, boolean | string>
+  city_id: number | null
+}
+
+export interface GuestCheck {
+  guest_id: number
+  category_id: number
+  checked: boolean
 }
 
 export interface AppState {
   cities: City[]
-  categories: CategoryColumn[]
+  categories: Category[]
   guests: Guest[]
+}
+
+export interface AppBootstrap {
+  cities: City[]
+  categories: Category[]
+  guests: Guest[]
+  checks: GuestCheck[]
 }

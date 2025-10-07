@@ -1,7 +1,7 @@
 "use client"
 
 import * as React from "react"
-import type { Guest, City, CategoryColumn, ID } from "@/lib/types"
+import type { Guest, City, Category, ID } from "@/lib/types"
 import { Checkbox } from "@/components/ui/checkbox"
 import { Badge } from "@/components/ui/badge"
 import { cn } from "@/lib/utils"
@@ -10,14 +10,22 @@ export function GuestsTable({
   guests,
   allCities,
   categories,
+  checks,
   onToggleCheckbox,
 }: {
   guests: Guest[]
   allCities: City[]
-  categories: CategoryColumn[]
+  categories: Category[]
+  checks: Record<string, boolean>
   onToggleCheckbox: (guestId: ID, colId: ID) => void
 }) {
-  const cityName = React.useCallback((id: ID) => allCities.find((c) => c.id === id)?.name || "—", [allCities])
+  const cityName = React.useCallback(
+    (id: ID | null) => {
+      if (id == null) return "—"
+      return allCities.find((c) => c.id === id)?.name || "—"
+    },
+    [allCities],
+  )
 
   return (
     <div className="overflow-x-auto rounded-md border">
@@ -27,7 +35,7 @@ export function GuestsTable({
             <Th className="w-[72px]">Sr n</Th>
             <Th>Name / City</Th>
             {categories.map((col) => (
-              <Th key={col.id}>{col.label}</Th>
+              <Th key={col.id}>{col.name}</Th>
             ))}
           </tr>
         </thead>
@@ -39,14 +47,12 @@ export function GuestsTable({
                 <div className="flex flex-col">
                   <span className="font-medium">{g.name || "—"}</span>
                   <div className="mt-1 flex flex-wrap gap-1.5">
-                    {g.cityIds.length === 0 ? (
+                    {g.city_id == null ? (
                       <span className="text-xs text-muted-foreground">No city</span>
                     ) : (
-                      g.cityIds.map((cid) => (
-                        <Badge key={cid} variant="outline" className="text-xs">
-                          {cityName(cid)}
-                        </Badge>
-                      ))
+                      <Badge variant="outline" className="text-xs">
+                        {cityName(g.city_id)}
+                      </Badge>
                     )}
                   </div>
                 </div>
@@ -55,9 +61,9 @@ export function GuestsTable({
                 <Td key={col.id}>
                   {col.type === "checkbox" ? (
                     <Checkbox
-                      checked={Boolean(g.values[col.id])}
+                      checked={Boolean(checks[`${g.id}:${col.id}`])}
                       onCheckedChange={() => onToggleCheckbox(g.id, col.id)}
-                      aria-label={`${col.label} for ${g.name}`}
+                      aria-label={`${col.name} for ${g.name}`}
                     />
                   ) : (
                     <span className="text-muted-foreground">—</span>
