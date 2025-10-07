@@ -11,8 +11,10 @@ import { FiltersSheet } from "./filters-sheet";
 import ManageCitiesDialog from "./manage-cities-dialog";
 import ManageColumnsDialog from "./manage-columns-dialog";
 import { useStore } from "@/lib/state";
+import NavbarActions from "./navbar-actions";
 
-export function GuestManager() {
+export function GuestManager({ code }: { code: string }) {
+  if(!code) throw new Error("GuestManager requires code prop");
   // Select individual slices to avoid full-state subscription churn
   const cities = useStore((s) => s.cities);
   const categories = useStore((s) => s.categories);
@@ -97,11 +99,9 @@ export function GuestManager() {
 
   return (
     <main className="p-2 md:p-4">
-      <header className="mb-4 flex items-center justify-between">
-        <h1 className="text-pretty text-2xl font-semibold">
-          Wedding Guest Planner
-        </h1>
-        <ThemeToggle />
+      <header className="flex items-center justify-between mb-2">
+        <span className="text-lg font-semibold">Wedding Planner</span>
+        <NavbarActions code={code}/>
       </header>
 
       <Card className="p-2 md:p-4">
@@ -115,9 +115,11 @@ export function GuestManager() {
               findCityByExactToken={findCityByExactToken}
               suggestCities={suggestCities}
             />
-            {guests.length > 0 && <div className="md:ml-auto">
-              <FiltersSheet />
-            </div>}
+            {guests.length > 0 && (
+              <div className="md:ml-auto">
+                <FiltersSheet />
+              </div>
+            )}
           </div>
 
           {/* Row: Add city/column dialogs */}
@@ -127,15 +129,17 @@ export function GuestManager() {
           </div>
 
           {/* Row: Search */}
-          {guests.length > 0 && <div className="flex w-full md:max-w-sm">
-            <Input
-              placeholder="Search by name..."
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-              className="md:max-w-xs"
-              aria-label="Search guests"
-            />
-          </div>}
+          {guests.length > 0 && (
+            <div className="flex w-full md:max-w-sm">
+              <Input
+                placeholder="Search by name..."
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+                className="md:max-w-xs"
+                aria-label="Search guests"
+              />
+            </div>
+          )}
         </div>
 
         {/* Table */}
@@ -146,7 +150,9 @@ export function GuestManager() {
             categories={categories}
             checks={checks}
             onDeleteGuest={async (id) => {
-              const confirmed = confirm("Are you sure you want to delete this guest?");
+              const confirmed = confirm(
+                "Are you sure you want to delete this guest?"
+              );
               if (confirmed) {
                 await useStore.getState().deleteGuest(id);
               }

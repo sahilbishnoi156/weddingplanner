@@ -9,6 +9,7 @@ import type {
   Category,
   ColumnType,
 } from "@/lib/types";
+import { loadSavedWedding } from "@/lib/weddingLocal";
 import { OfflineQueue } from "@/lib/offline-queue";
 
 type ColumnFilterState = "any" | "checked" | "unchecked";
@@ -37,8 +38,13 @@ type AppState = {
   addCategory: (name: string, type?: string) => Promise<Category | null>;
   editCity: (id: number, name: string) => Promise<City | null>;
   deleteCity: (id: number) => Promise<boolean>;
+  deleteWedding: () => Promise<boolean>;
   deleteGuest: (id: number) => Promise<boolean>;
-  editCategory: (id: number, name: string, type?: string) => Promise<Category | null>;
+  editCategory: (
+    id: number,
+    name: string,
+    type?: string
+  ) => Promise<Category | null>;
   deleteCategory: (id: number) => Promise<boolean>;
   addGuest: (name: string, cityId: number | null) => Promise<Guest | null>;
   toggleCheck: (
@@ -95,7 +101,11 @@ export const useAppStore = create<AppState>((set, get) => ({
     }
 
     try {
-      const res = await fetch("/api/bootstrap", { cache: "no-store" });
+      const saved = loadSavedWedding();
+      const headers: Record<string, string> = saved
+        ? { "x-wedding-code": saved.code }
+        : {};
+      const res = await fetch("/api/bootstrap", { cache: "no-store", headers });
       if (!res.ok) throw new Error("bootstrap failed");
       const data: AppBootstrap = await res.json();
 
@@ -156,11 +166,36 @@ export const useAppStore = create<AppState>((set, get) => ({
     });
   },
 
+  deleteWedding: async () => {
+    const saved = loadSavedWedding();
+    if (!saved) {
+      toast.error("No wedding to delete");
+      return false;
+    }
+    try {
+      const headers: Record<string, string> = {
+        "Content-Type": "application/json",
+      };
+      const res = await fetch("/api/weddings", {
+        method: "DELETE",
+        body: JSON.stringify({ code: saved.code }),
+      });
+      if (!res.ok) throw new Error("delete wedding failed");
+      toast.success("Wedding deleted");
+      return true;
+    } catch {
+      toast.error("Could not delete wedding");
+      return false;
+    }
+  },
+
   addCity: async (name) => {
     const trimmed = name.trim();
     if (!trimmed) return null;
     // frontend uniqueness check
-    if (get().cities.some((c) => c.name.toLowerCase() === trimmed.toLowerCase())) {
+    if (
+      get().cities.some((c) => c.name.toLowerCase() === trimmed.toLowerCase())
+    ) {
       toast.error(`City '${trimmed}' already exists.`);
       return null;
     }
@@ -180,9 +215,14 @@ export const useAppStore = create<AppState>((set, get) => ({
     });
 
     try {
+      const saved = loadSavedWedding();
+      const headers: Record<string, string> = {
+        "Content-Type": "application/json",
+      };
+      if (saved) headers["x-wedding-code"] = saved.code;
       const res = await fetch("/api/cities", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers,
         body: JSON.stringify({ name: trimmed }),
       });
       if (!res.ok) throw new Error("city create failed");
@@ -215,18 +255,39 @@ export const useAppStore = create<AppState>((set, get) => ({
   editCity: async (id, name) => {
     const trimmed = name.trim();
     if (!trimmed) return null;
-    if (get().cities.some((c) => c.id !== id && c.name.toLowerCase() === trimmed.toLowerCase())) {
+    if (
+      get().cities.some(
+        (c) => c.id !== id && c.name.toLowerCase() === trimmed.toLowerCase()
+      )
+    ) {
       toast.error(`City '${trimmed}' already exists.`);
       return null;
     }
     const prev = get().cities;
-    set({ cities: prev.map((c) => (c.id === id ? { ...c, name: trimmed } : c)).sort((a, b) => a.name.localeCompare(b.name)) });
+    set({
+      cities: prev
+        .map((c) => (c.id === id ? { ...c, name: trimmed } : c))
+        .sort((a, b) => a.name.localeCompare(b.name)),
+    });
     try {
-      const res = await fetch("/api/cities", { method: "PATCH", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ id, name: trimmed }) });
+      const saved = loadSavedWedding();
+      const headers: Record<string, string> = {
+        "Content-Type": "application/json",
+      };
+      if (saved) headers["x-wedding-code"] = saved.code;
+      const res = await fetch("/api/cities", {
+        method: "PATCH",
+        headers,
+        body: JSON.stringify({ id, name: trimmed }),
+      });
       if (!res.ok) throw new Error("city edit failed");
       const updated: City = await res.json();
       toast.success(`Updated city to '${updated.name}'`);
-      set({ cities: get().cities.map((c) => (c.id === id ? updated : c)).sort((a, b) => a.name.localeCompare(b.name)) });
+      set({
+        cities: get()
+          .cities.map((c) => (c.id === id ? updated : c))
+          .sort((a, b) => a.name.localeCompare(b.name)),
+      });
       return updated;
     } catch {
       set({ cities: prev });
@@ -241,7 +302,16 @@ export const useAppStore = create<AppState>((set, get) => ({
     if (!target) return false;
     set({ cities: prev.filter((c) => c.id !== id) });
     try {
-      const res = await fetch("/api/cities", { method: "DELETE", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ id }) });
+      const saved = loadSavedWedding();
+      const headers: Record<string, string> = {
+        "Content-Type": "application/json",
+      };
+      if (saved) headers["x-wedding-code"] = saved.code;
+      const res = await fetch("/api/cities", {
+        method: "DELETE",
+        headers,
+        body: JSON.stringify({ id }),
+      });
       if (!res.ok) throw new Error("city delete failed");
       toast.success(`Deleted city '${target.name}'`);
       return true;
@@ -258,7 +328,16 @@ export const useAppStore = create<AppState>((set, get) => ({
     if (!target) return false;
     set({ guests: prev.filter((g) => g.id !== id) });
     try {
-      const res = await fetch("/api/guests", { method: "DELETE", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ id }) });
+      const saved = loadSavedWedding();
+      const headers: Record<string, string> = {
+        "Content-Type": "application/json",
+      };
+      if (saved) headers["x-wedding-code"] = saved.code;
+      const res = await fetch("/api/guests", {
+        method: "DELETE",
+        headers,
+        body: JSON.stringify({ id }),
+      });
       if (!res.ok) throw new Error("guest delete failed");
       toast.success(`Deleted guest '${target.name}'`);
       return true;
@@ -272,7 +351,11 @@ export const useAppStore = create<AppState>((set, get) => ({
   addCategory: async (name, type = "checkbox") => {
     const trimmed = name.trim();
     if (!trimmed) return null;
-    if (get().categories.some((c) => c.name.toLowerCase() === trimmed.toLowerCase())) {
+    if (
+      get().categories.some(
+        (c) => c.name.toLowerCase() === trimmed.toLowerCase()
+      )
+    ) {
       toast.error(`Column '${trimmed}' already exists.`);
       return null;
     }
@@ -293,9 +376,14 @@ export const useAppStore = create<AppState>((set, get) => ({
     });
 
     try {
+      const saved = loadSavedWedding();
+      const headers: Record<string, string> = {
+        "Content-Type": "application/json",
+      };
+      if (saved) headers["x-wedding-code"] = saved.code;
       const res = await fetch("/api/categories", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers,
         body: JSON.stringify({ name: trimmed, type }),
       });
       if (!res.ok) throw new Error("category create failed");
@@ -328,18 +416,37 @@ export const useAppStore = create<AppState>((set, get) => ({
   editCategory: async (id, name, type = "checkbox") => {
     const trimmed = name.trim();
     if (!trimmed) return null;
-    if (get().categories.some((c) => c.id !== id && c.name.toLowerCase() === trimmed.toLowerCase())) {
+    if (
+      get().categories.some(
+        (c) => c.id !== id && c.name.toLowerCase() === trimmed.toLowerCase()
+      )
+    ) {
       toast.error(`Column '${trimmed}' already exists.`);
       return null;
     }
     const prev = get().categories;
-    set({ categories: prev.map((c) => (c.id === id ? { ...c, name: trimmed, type } : c)) });
+    set({
+      categories: prev.map((c) =>
+        c.id === id ? { ...c, name: trimmed, type } : c
+      ),
+    });
     try {
-      const res = await fetch("/api/categories", { method: "PATCH", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ id, name: trimmed, type }) });
+      const saved = loadSavedWedding();
+      const headers: Record<string, string> = {
+        "Content-Type": "application/json",
+      };
+      if (saved) headers["x-wedding-code"] = saved.code;
+      const res = await fetch("/api/categories", {
+        method: "PATCH",
+        headers,
+        body: JSON.stringify({ id, name: trimmed, type }),
+      });
       if (!res.ok) throw new Error("category edit failed");
       const updated: Category = await res.json();
       toast.success(`Updated column to '${updated.name}'`);
-      set({ categories: get().categories.map((c) => (c.id === id ? updated : c)) });
+      set({
+        categories: get().categories.map((c) => (c.id === id ? updated : c)),
+      });
       return updated;
     } catch {
       set({ categories: prev });
@@ -354,7 +461,16 @@ export const useAppStore = create<AppState>((set, get) => ({
     if (!target) return false;
     set({ categories: prev.filter((c) => c.id !== id) });
     try {
-      const res = await fetch("/api/categories", { method: "DELETE", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ id }) });
+      const saved = loadSavedWedding();
+      const headers: Record<string, string> = {
+        "Content-Type": "application/json",
+      };
+      if (saved) headers["x-wedding-code"] = saved.code;
+      const res = await fetch("/api/categories", {
+        method: "DELETE",
+        headers,
+        body: JSON.stringify({ id }),
+      });
       if (!res.ok) throw new Error("category delete failed");
       toast.success(`Deleted column '${target.name}'`);
       return true;
@@ -385,9 +501,14 @@ export const useAppStore = create<AppState>((set, get) => ({
     });
 
     try {
+      const saved = loadSavedWedding();
+      const headers: Record<string, string> = {
+        "Content-Type": "application/json",
+      };
+      if (saved) headers["x-wedding-code"] = saved.code;
       const res = await fetch("/api/guests", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers,
         body: JSON.stringify({ name: trimmed, cityId: cityId ?? null }),
       });
       if (!res.ok) throw new Error("guest create failed");
@@ -427,9 +548,14 @@ export const useAppStore = create<AppState>((set, get) => ({
     });
 
     try {
+      const saved = loadSavedWedding();
+      const headers: Record<string, string> = {
+        "Content-Type": "application/json",
+      };
+      if (saved) headers["x-wedding-code"] = saved.code;
       const res = await fetch("/api/checks", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers,
         body: JSON.stringify({ guestId, categoryId, checked }),
       });
       if (!res.ok) throw new Error("check toggle failed");

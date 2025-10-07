@@ -6,21 +6,46 @@ datasource db {
   provider = "postgresql"
   url      = env("POSTGRES_PRISMA_URL")
 }
+model Wedding {
+  id        Int      @id @default(autoincrement())
+  code      String   @unique
+  createdAt DateTime @default(now())
+  expiresAt DateTime
+
+  cities     City[]
+  categories Category[]
+  guests     Guest[]
+  checks     Check[]
+
+  @@index([code])
+  @@index([expiresAt])
+}
 
 model City {
-  id     Int     @id @default(autoincrement())
-  name   String  @unique
-  guests Guest[]
+  id        Int     @id @default(autoincrement())
+  name      String
+  weddingId Int
+  wedding   Wedding @relation(fields: [weddingId], references: [id], onDelete: Cascade)
+  guests    Guest[]
 
+  // city name must be unique per wedding
+  @@unique([weddingId, name])
+  @@index([weddingId])
   @@index([name])
 }
 
 model Category {
-  id    Int     @id @default(autoincrement())
-  name  String  @unique
-  type  String  @default("checkbox")
+  id        Int     @id @default(autoincrement())
+  name      String
+  type      String  @default("checkbox")
+  weddingId Int
+  wedding   Wedding @relation(fields: [weddingId], references: [id], onDelete: Cascade)
 
   checks Check[]
+
+  // category name unique per wedding
+  @@unique([weddingId, name])
+  @@index([weddingId])
 }
 
 model Guest {
@@ -29,10 +54,13 @@ model Guest {
   cityId    Int?
   city      City?   @relation(fields: [cityId], references: [id])
   checks    Check[]
+  weddingId Int
+  wedding   Wedding @relation(fields: [weddingId], references: [id], onDelete: Cascade)
 
   createdAt DateTime @default(now())
-  @@index([name])
+  @@index([name, weddingId])
   @@index([cityId])
+  @@index([weddingId])
 }
 
 model Check {
@@ -41,10 +69,13 @@ model Check {
   categoryId  Int
   checked     Boolean @default(false)
   updatedAt   DateTime @updatedAt
+  weddingId   Int
+  wedding     Wedding  @relation(fields: [weddingId], references: [id], onDelete: Cascade)
 
   guest     Guest    @relation(fields: [guestId], references: [id], onDelete: Cascade)
   category  Category @relation(fields: [categoryId], references: [id], onDelete: Cascade)
 
   @@unique([guestId, categoryId])
   @@index([categoryId])
+  @@index([weddingId])
 }
