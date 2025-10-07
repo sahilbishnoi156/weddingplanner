@@ -100,7 +100,7 @@ export function GuestManager({ code }: { code: string }) {
   return (
     <main className="p-2 md:p-4">
       <header className="flex items-center justify-between mb-2">
-        <span className="text-lg font-semibold">Wedding Planner</span>
+        <span className="text-lg font-semibold">Wedding Manager</span>
         <NavbarActions />
       </header>
 

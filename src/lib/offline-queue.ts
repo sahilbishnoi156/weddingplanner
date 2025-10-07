@@ -5,7 +5,7 @@ type Mutation = {
   body?: any
 }
 
-const STORAGE_KEY = "guest-planner:pending-mutations"
+const STORAGE_KEY = "guest-Manager:pending-mutations"
 
 function loadQueue(): Mutation[] {
   try {

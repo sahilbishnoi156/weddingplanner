@@ -1,6 +1,6 @@
 import type { AppState } from "./types"
 
-const KEY = "wedding-planner-state-v1"
+const KEY = "wedding-Manager-state-v1"
 
 export function loadState(): AppState | null {
   if (typeof window === "undefined") return null

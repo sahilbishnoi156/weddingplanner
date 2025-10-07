@@ -56,7 +56,7 @@ type AppState = {
   ) => Promise<void>;
 };
 
-const CACHE_KEY = "guest-planner:cache-v1";
+const CACHE_KEY = "guest-Manager:cache-v1";
 
 function saveCache(
   state: Pick<

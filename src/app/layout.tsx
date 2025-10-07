@@ -15,7 +15,7 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Wedding Planner",
+  title: "Wedding Manager",
   description:
     "Fastest way to organize your guest list and manage your wedding in one place.",
 };
@@ -28,8 +28,7 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body
-        suppressHydrationWarning
-        className={`${geistSans.variable} ${geistMono.variable} dark`}
+        className={`${geistSans.variable} ${geistMono.variable}`}
       >
         <main className="">{children}</main>
         <Toaster />
