@@ -28,7 +28,8 @@ export default function RootLayout({
     <html lang="en">
       <body
         suppressHydrationWarning
-        className={`${geistSans.variable} ${geistMono.variable} dark`}>
+        className={`${geistSans.variable} ${geistMono.variable} dark`}
+      >
         <main className="">{children}</main>
         <Toaster />
       </body>

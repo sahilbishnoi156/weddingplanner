@@ -26,7 +26,9 @@ type AppState = {
   isBootstrapped: boolean;
   syncBusy: boolean;
   draft: FilterState;
+  changeLanguage: (lang: string) => void;
   applied: FilterState;
+  language: string;
 
   bootstrap: () => Promise<void>;
   syncNow: () => Promise<void>;
@@ -86,6 +88,7 @@ export const useAppStore = create<AppState>((set, get) => ({
   syncBusy: false,
   draft: { cityIds: [], categories: {} },
   applied: { cityIds: [], categories: {} },
+  language: "hi",
 
   bootstrap: async () => {
     const cached = loadCache() as any;
@@ -148,6 +151,10 @@ export const useAppStore = create<AppState>((set, get) => ({
     } finally {
       set({ syncBusy: false });
     }
+  },
+
+  changeLanguage: (lang: string) => {
+    set({ language: lang });
   },
 
   setDraft: (next: FilterState) => {

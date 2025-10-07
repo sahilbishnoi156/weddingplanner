@@ -6,7 +6,7 @@ import { toast } from "sonner";
 import { ThemeToggle } from "./theme-toggle";
 import { loadSavedWedding, clearSavedWedding } from "@/lib/weddingLocal";
 import { Button } from "./ui/button";
-import { CheckCheck, Copy, Trash2 } from "lucide-react";
+import { CheckCheck, Copy, LogOut, Trash2 } from "lucide-react";
 
 export default function NavbarActions() {
   const router = useRouter();
@@ -38,7 +38,6 @@ export default function NavbarActions() {
       }
     }
   }, []);
-
 
   async function handleDelete() {
     const code = currentCode;
@@ -84,10 +83,8 @@ export default function NavbarActions() {
     <div className="flex items-center gap-2">
       {isCodeRoute && (
         <>
-          
           <Button
-            variant="ghost"
-            size="icon-sm"
+            variant="outline"
             onClick={handleDelete}
             aria-label="Delete wedding"
           >
@@ -95,8 +92,7 @@ export default function NavbarActions() {
           </Button>
 
           <Button
-            variant="ghost"
-            size="icon-sm"
+            variant="outline"
             onClick={handleCopy}
             aria-label="Copy code"
           >
@@ -106,16 +102,15 @@ export default function NavbarActions() {
               <Copy className="h-4 w-4" />
             )}
           </Button>
-
         </>
       )}
 
       <Button
-        variant="ghost"
+        variant="outline"
         onClick={handleLogout}
         aria-label="Logout saved wedding"
       >
-        Logout
+        <LogOut className="h-4 w-4" />
       </Button>
 
       <ThemeToggle />

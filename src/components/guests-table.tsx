@@ -6,6 +6,8 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
 import { Trash2Icon } from "lucide-react";
+import { useAppStore } from "@/lib/state";
+
 
 export function GuestsTable({
   guests,
@@ -22,6 +24,8 @@ export function GuestsTable({
   onToggleCheckbox: (guestId: ID, colId: ID) => void;
   onDeleteGuest: (guestId: ID) => void;
 }) {
+  const language = useAppStore((state) => state.language); // 'en' or 'hi'
+
   const cityName = React.useCallback(
     (id: ID | null) => {
       if (id == null) return "—";
@@ -41,6 +45,7 @@ export function GuestsTable({
             {categories.map((col) => (
               <Th key={col.id}>{col.name}</Th>
             ))}
+            <Th className="w-[40px]">Del</Th>
           </tr>
         </thead>
         <tbody>
@@ -49,18 +54,15 @@ export function GuestsTable({
               <Td className="text-muted-foreground">{idx + 1}</Td>
               <Td>
                 <div className="flex items-center gap-2">
-                  <span className="font-medium">{g.name || "—"}</span>
-                  <button onClick={() => g.id && onDeleteGuest(g.id)} aria-label={`Delete ${g.name}`}>
-                    <Trash2Icon className="inline size-5 mb-0.5 text-red-600 cursor-pointer hover:bg-neutral-800 p-0.5 rounded-sm" />
-                  </button>
+                  <span className="font-medium">
+                    {g.name || "—"}
+                  </span>
                 </div>
               </Td>
               <Td>
                 <div className="mt-1 flex flex-wrap gap-1.5">
                   {g.city_id == null ? (
-                    <span className="text-xs text-muted-foreground">
-                      No city
-                    </span>
+                    <span className="text-xs text-muted-foreground">No city</span>
                   ) : (
                     <Badge variant="outline" className="text-xs">
                       {cityName(g.city_id)}
@@ -82,6 +84,14 @@ export function GuestsTable({
                   )}
                 </Td>
               ))}
+              <Td className="w-[40px]">
+                <button
+                    onClick={() => g.id && onDeleteGuest(g.id)}
+                    aria-label={`Delete ${g.name}`}
+                  >
+                    <Trash2Icon className="inline size-5 mb-0.5 text-red-600 cursor-pointer hover:bg-neutral-800 p-0.5 rounded-sm" />
+                  </button>
+              </Td>
             </tr>
           ))}
         </tbody>

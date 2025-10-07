@@ -14,7 +14,7 @@ import { useStore } from "@/lib/state";
 import NavbarActions from "./navbar-actions";
 
 export function GuestManager({ code }: { code: string }) {
-  if(!code) throw new Error("GuestManager requires code prop");
+  if (!code) throw new Error("GuestManager requires code prop");
   // Select individual slices to avoid full-state subscription churn
   const cities = useStore((s) => s.cities);
   const categories = useStore((s) => s.categories);
@@ -101,7 +101,7 @@ export function GuestManager({ code }: { code: string }) {
     <main className="p-2 md:p-4">
       <header className="flex items-center justify-between mb-2">
         <span className="text-lg font-semibold">Wedding Planner</span>
-        <NavbarActions/>
+        <NavbarActions />
       </header>
 
       <Card className="p-2 md:p-4">
@@ -115,7 +115,7 @@ export function GuestManager({ code }: { code: string }) {
               findCityByExactToken={findCityByExactToken}
               suggestCities={suggestCities}
             />
-            {guests.length > 0 && (
+            {(guests.length > 0 && (cities.length > 0 || categories.length > 0)) && (
               <div className="md:ml-auto">
                 <FiltersSheet />
               </div>
@@ -138,7 +138,7 @@ export function GuestManager({ code }: { code: string }) {
                 className="md:max-w-xs"
                 aria-label="Search guests"
               />
-            </div>
+            </div>  
           )}
         </div>
 
