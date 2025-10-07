@@ -1,22 +1,36 @@
-"use client"
+"use client";
 
-import { useState } from "react"
-import { useStore } from "@/lib/state"
-import { Button } from "@/components/ui/button"
-import { Dialog, DialogTrigger, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog"
-import { Input } from "@/components/ui/input"
+import { useState } from "react";
+import { useStore } from "@/lib/state";
+import { toast } from "sonner";
+import { Button } from "@/components/ui/button";
+import {
+  Dialog,
+  DialogTrigger,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+} from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
 
 export function AddCityDialog() {
-  const addCity = useStore((s) => s.addCity)
-  const [open, setOpen] = useState(false)
-  const [value, setValue] = useState("")
+  const addCity = useStore((s) => s.addCity);
+  const [open, setOpen] = useState(false);
+  const [value, setValue] = useState("");
 
   const submit = async () => {
-    if (!value.trim()) return
-    await addCity(value.trim())
-    setValue("")
-    setOpen(false)
-  }
+    if (!value.trim()) return;
+    const trimmed = value.trim()
+    if (useStore.getState().cities.some((c) => c.name.toLowerCase() === trimmed.toLowerCase())) {
+      toast.error(`City '${trimmed}' already exists.`)
+      return
+    }
+    const created = await addCity(trimmed)
+    if (created) toast.success(`City '${created.name}' added`)
+    setValue("");
+    setOpen(false);
+  };
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
@@ -33,7 +47,7 @@ export function AddCityDialog() {
             value={value}
             onChange={(e) => setValue(e.target.value)}
             onKeyDown={(e) => {
-              if (e.key === "Enter") submit()
+              if (e.key === "Enter") submit();
             }}
           />
         </div>
@@ -45,5 +59,5 @@ export function AddCityDialog() {
         </DialogFooter>
       </DialogContent>
     </Dialog>
-  )
+  );
 }

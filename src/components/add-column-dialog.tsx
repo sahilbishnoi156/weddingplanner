@@ -2,6 +2,7 @@
 
 import { useState } from "react"
 import { useStore } from "@/lib/state"
+import { toast } from "sonner"
 import { Button } from "@/components/ui/button"
 import { Dialog, DialogTrigger, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog"
 import { Input } from "@/components/ui/input"
@@ -15,7 +16,13 @@ export function AddColumnDialog() {
 
   const submit = async () => {
     if (!name.trim()) return
-    await addCategory(name.trim(), type)
+    const trimmed = name.trim()
+    if (useStore.getState().categories.some((c) => c.name.toLowerCase() === trimmed.toLowerCase())) {
+      toast.error(`Column '${trimmed}' already exists.`)
+      return
+    }
+    const created = await addCategory(trimmed, type)
+    if (created) toast.success(`Column '${created.name}' added`)
     setName("")
     setType("checkbox")
     setOpen(false)

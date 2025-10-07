@@ -10,7 +10,7 @@ export interface City {
 export interface Category {
   id: number
   name: string
-  type: ColumnType
+  type: ColumnType | string
 }
 
 export interface Guest {

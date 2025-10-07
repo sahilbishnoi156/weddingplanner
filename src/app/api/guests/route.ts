@@ -18,3 +18,17 @@ export async function POST(request: Request) {
   })
   return NextResponse.json({ id: created.id, name: created.name, city_id: created.cityId })
 }
+
+export async function DELETE(request: Request) {
+  const body = await request.json()
+  const id = Number(body?.id)
+  if (!id) return NextResponse.json({ error: "id required" }, { status: 400 })
+  try {
+    // Delete checks for this guest, Prisma will cascade if model configured; ensure explicit delete
+    await prisma.check.deleteMany({ where: { guestId: id } })
+    await prisma.guest.delete({ where: { id } })
+    return NextResponse.json({ ok: true })
+  } catch (err: any) {
+    return NextResponse.json({ error: "could not delete guest" }, { status: 500 })
+  }
+}
