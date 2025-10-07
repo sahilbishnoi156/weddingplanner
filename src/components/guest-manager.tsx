@@ -101,7 +101,7 @@ export function GuestManager({ code }: { code: string }) {
     <main className="p-2 md:p-4">
       <header className="flex items-center justify-between mb-2">
         <span className="text-lg font-semibold">Wedding Planner</span>
-        <NavbarActions code={code}/>
+        <NavbarActions/>
       </header>
 
       <Card className="p-2 md:p-4">

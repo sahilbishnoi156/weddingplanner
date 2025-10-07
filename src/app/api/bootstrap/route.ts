@@ -15,7 +15,7 @@ export async function GET(request: Request) {
     return NextResponse.json({ cities: [], categories: [], guests: [], checks: [] })
   }
 
-  const wedding = await prisma.wedding.findFirst({ where: { code, expiresAt: { gt: new Date() } }, select: { id: true } })
+  const wedding = await prisma.wedding.findFirst({ where: { code }, select: { id: true } })
   if (!wedding) return NextResponse.json({ cities: [], categories: [], guests: [], checks: [] })
 
   const [citiesRaw, categoriesRaw, guestsRaw, checksRaw] = await Promise.all([

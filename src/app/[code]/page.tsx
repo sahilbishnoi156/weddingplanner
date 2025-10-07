@@ -10,8 +10,6 @@ export default function Page({
   params: Promise<{ code: string }>;
 }) {
   const { code } = use(params);
-  // Try to synchronously save code to localStorage to avoid bootstrap race where
-  // GuestManager requests /api/bootstrap before the code is persisted.
   if (typeof window !== "undefined" && code) {
     try {
       const existing = loadSavedWedding();

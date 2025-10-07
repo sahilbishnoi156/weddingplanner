@@ -10,7 +10,6 @@ model Wedding {
   id        Int      @id @default(autoincrement())
   code      String   @unique
   createdAt DateTime @default(now())
-  expiresAt DateTime
 
   cities     City[]
   categories Category[]
@@ -18,7 +17,6 @@ model Wedding {
   checks     Check[]
 
   @@index([code])
-  @@index([expiresAt])
 }
 
 model City {

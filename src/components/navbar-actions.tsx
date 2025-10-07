@@ -7,34 +7,71 @@ import { ThemeToggle } from "./theme-toggle";
 import { loadSavedWedding, clearSavedWedding } from "@/lib/weddingLocal";
 import { Button } from "./ui/button";
 import { CheckCheck, Copy, Trash2 } from "lucide-react";
-import { useAppStore } from "@/lib/state";
 
-export default function NavbarActions({ code }: { code: string }) {
+export default function NavbarActions() {
   const router = useRouter();
   const [busy, setBusy] = React.useState(false);
   const [isCopied, setIsCopied] = React.useState(false);
-  const deleteWedding = useAppStore.getState().deleteWedding;
 
-  async function handleRenew() {
+  // Determine if we're currently on a code route: /<CODE>
+  const [isCodeRoute, setIsCodeRoute] = React.useState(false);
+  const [currentCode, setCurrentCode] = React.useState<string | null>(null);
+  const [savedWedding, setSavedWedding] = React.useState<{
+    code: string;
+    savedAt: number;
+    expireAt: number;
+  } | null>(null);
+
+  React.useEffect(() => {
     const saved = loadSavedWedding();
-    if (!saved?.code) return toast.error("No wedding saved to renew");
+    setSavedWedding(saved);
+    setCurrentCode(saved?.code ?? null);
+    if (typeof window !== "undefined") {
+      const path = window.location.pathname.replace(/\/$/, "");
+      // match a path like /ABCDEF (6-8 chars)
+      const m = path.match(/^\/([A-Z0-9]{6,8})$/i);
+      if (m) {
+        setIsCodeRoute(true);
+        if (!saved?.code) setCurrentCode(m[1].toUpperCase());
+      } else {
+        setIsCodeRoute(false);
+      }
+    }
+  }, []);
+
+
+  async function handleDelete() {
+    const code = currentCode;
+    if (!code) return toast.error("No wedding code available to delete");
+    if (!confirm("Delete this wedding? This cannot be undone.")) return;
     setBusy(true);
     try {
-      const res = await fetch("/api/weddings/renew", {
+      const res = await fetch("/api/weddings/delete", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ code: saved.code }),
+        body: JSON.stringify({ code }),
       });
       const body = await res.json();
-      if (!res.ok) return toast.error(body?.error || "Could not renew wedding");
-      const expires = new Date(body.expiresAt);
-      toast.success(`Renewed until ${expires.toLocaleString()}`);
+      if (!res.ok)
+        return toast.error(body?.error || "Could not delete wedding");
+      clearSavedWedding();
+      toast.success("Wedding deleted");
+      router.push("/");
     } catch (err) {
       console.error(err);
-      toast.error("Renew failed");
+      toast.error("Delete failed");
     } finally {
       setBusy(false);
     }
+  }
+
+  function handleCopy() {
+    const code = currentCode;
+    if (!code) return toast.error("No code to copy");
+    navigator.clipboard.writeText(code);
+    setIsCopied(true);
+    toast.success("Code copied to clipboard");
+    setTimeout(() => setIsCopied(false), 2000);
   }
 
   function handleLogout() {
@@ -45,61 +82,36 @@ export default function NavbarActions({ code }: { code: string }) {
 
   return (
     <div className="flex items-center gap-2">
-      <Button
-        variant={"ghost"}
-        size={"icon-sm"}
-        onClick={() => {
-          if (
-            !confirm(
-              "Are you sure you want to delete this wedding? This action cannot be undone."
-            )
-          )
-            return;
-          if (busy) return;
-          setBusy(true);
-          deleteWedding()
-            .then((data) => {
-              if (!data) return;
-              clearSavedWedding();
-              router.push("/");
-            })
-            .catch((err) => {
-              console.error(err);
-              toast.error("Delete failed");
-            })
-            .finally(() => setBusy(false));
-        }}
-        aria-label="Delete Wedding"
-      >
-        <Trash2 className="h-4 w-4 text-red-600" />
-      </Button>
-      <Button
-        variant={"ghost"}
-        size={"icon-sm"}
-        onClick={() => {
-          navigator.clipboard.writeText(code || loadSavedWedding()?.code || "");
-          setIsCopied(true);
-          setTimeout(() => setIsCopied(false), 2000);
-        }}
-        aria-label="Copy Code to clipboard"
-      >
-        {isCopied ? (
-          <CheckCheck className="size-4" />
-        ) : (
-          <Copy className="h-4 w-4" />
-        )}
-      </Button>
-      <Button
-        variant={"ghost"}
-        onClick={handleRenew}
-        disabled={busy}
-        aria-label="Renew wedding"
-      >
-        Renew
-      </Button>
+      {isCodeRoute && (
+        <>
+          
+          <Button
+            variant="ghost"
+            size="icon-sm"
+            onClick={handleDelete}
+            aria-label="Delete wedding"
+          >
+            <Trash2 className="h-4 w-4 text-red-600" />
+          </Button>
+
+          <Button
+            variant="ghost"
+            size="icon-sm"
+            onClick={handleCopy}
+            aria-label="Copy code"
+          >
+            {isCopied ? (
+              <CheckCheck className="h-4 w-4" />
+            ) : (
+              <Copy className="h-4 w-4" />
+            )}
+          </Button>
+
+        </>
+      )}
 
       <Button
-        variant={"ghost"}
+        variant="ghost"
         onClick={handleLogout}
         aria-label="Logout saved wedding"
       >

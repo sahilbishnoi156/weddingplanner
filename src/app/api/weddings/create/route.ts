@@ -16,7 +16,6 @@ export async function POST() {
   }
   if (!code) return NextResponse.json({ error: "could not generate code" }, { status: 500 });
 
-  const expiresAt = new Date(Date.now() + 15 * 24 * 60 * 60 * 1000);
-  const created = await prisma.wedding.create({ data: { code, expiresAt }, select: { id: true, code: true, expiresAt: true } });
+  const created = await prisma.wedding.create({ data: { code }, select: { id: true, code: true } });
   return NextResponse.json(created);
 }
