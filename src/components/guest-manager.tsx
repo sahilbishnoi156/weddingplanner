@@ -17,6 +17,7 @@ export function GuestManager({ code }: { code: string }) {
   if (!code) throw new Error("GuestManager requires code prop");
   // Select individual slices to avoid full-state subscription churn
   const cities = useStore((s) => s.cities);
+  const namesArray = useStore((s) => s.namesArray); // Get unique name words from zustand store
   const categories = useStore((s) => s.categories);
   const guests = useStore((s) => s.guests);
   const checks = useStore((s) => s.checks);
@@ -110,6 +111,7 @@ export function GuestManager({ code }: { code: string }) {
           <div className="flex flex-col gap-3 md:flex-row md:items-center md:gap-4">
             <AddGuestInput
               cities={cities}
+              namesArray={namesArray}
               onCreateGuest={createGuest}
               onCreateCity={onAddCity}
               findCityByExactToken={findCityByExactToken}

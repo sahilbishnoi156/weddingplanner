@@ -4,13 +4,22 @@ import { saveWedding } from "@/lib/weddingLocal";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { useState } from "react";
+import React, { useState } from "react";
 import { useRouter } from "next/navigation";
 
 export default function JoinForm() {
   const [code, setCode] = useState("");
   const [busy, setBusy] = useState(false);
   const router = useRouter();
+
+  React.useEffect(() => {
+    if(localStorage.getItem("wedding_code")) {
+      const storedCodeRawJson = localStorage.getItem("wedding_code");
+      const storedCodeJson = JSON.parse(storedCodeRawJson as string);
+      setCode(storedCodeJson.code as string);
+    }
+  }, [])
+  
 
   async function onSubmit(e?: React.FormEvent) {
     if (e) e.preventDefault();

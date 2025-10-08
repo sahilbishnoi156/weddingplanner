@@ -59,7 +59,7 @@ export default function Landing() {
               Join With a Code
             </h2>
             <p className="text-base dark:text-neutral-300 text-neutral-600 mb-3">
-              <span className="font-semibold text-white">Returning?</span> Enter your unique wedding code to access your dashboard (saved locally for 5 days). No sign-in or account needed.
+              <span className="font-semibold text-black">Returning?</span> Enter your unique wedding code to access your dashboard (saved locally for 5 days). No sign-in or account needed.
             </p>
             <JoinForm />
 
@@ -80,15 +80,15 @@ export default function Landing() {
                 Start an Instant Wedding
               </h2>
               <p className="text-base dark:text-neutral-300 text-neutral-600 mb-3">
-                <span className="font-semibold text-white">New?</span> Instantly generate a new wedding event and code — it’s free, fast, and account-free.
+                <span className="font-semibold text-black">New?</span> Instantly generate a new wedding event and code — it’s free, fast, and account-free.
               </p>
-              <div className="mt-4">
+              <div className="mt-10">
                 <CreateCode />
               </div>
             </section>
-            <section className="mt-5">
-              <h3 className="text-lg font-light mb-2 dark:text-neutral-100 text-neutral-600">Features:</h3>
-              <ul className="dark:text-neutral-300 text-neutral-600 text-base space-y-1 list-disc list-inside">
+            <section className="mt-2">
+              <h3 className="text-lg font-semibold mb-2 dark:text-neutral-100 text-neutral-600">Features:</h3>
+              <ul className="dark:text-neutral-300 text-neutral-600 text-sm space-y-1 list-disc list-inside">
                 <li>No registration or downloads required.</li>
                 <li>Mobile-first and desktop-responsive design for effortless access.</li>
                 <li>Fast setup, human-friendly codes (no confusing letters).</li>

@@ -29,7 +29,9 @@ type AppState = {
   changeLanguage: (lang: string) => void;
   applied: FilterState;
   language: string;
+  namesArray: Set<string>;
 
+  updateNamesArray: (guests: Guest[]) => Set<string>;
   bootstrap: () => Promise<void>;
   syncNow: () => Promise<void>;
   setDraft: (next: FilterState) => void;
@@ -61,7 +63,13 @@ const CACHE_KEY = "guest-Manager:cache-v1";
 function saveCache(
   state: Pick<
     AppState,
-    "cities" | "categories" | "guests" | "checks" | "draft" | "applied"
+    | "cities"
+    | "categories"
+    | "guests"
+    | "checks"
+    | "draft"
+    | "applied"
+    | "namesArray"
   >
 ) {
   try {
@@ -89,6 +97,18 @@ export const useAppStore = create<AppState>((set, get) => ({
   draft: { cityIds: [], categories: {} },
   applied: { cityIds: [], categories: {} },
   language: "hi",
+  namesArray: new Set<string>(),
+
+  updateNamesArray: (guests): Set<string> => {
+    const snSet = new Set<string>();
+    guests.forEach((guest) => {
+      const nameParts = guest.name.trim().split(/\s+/);
+      nameParts.forEach((part) => {
+        if (part.length > 2) snSet.add(part);
+      });
+    });
+    return snSet;
+  },
 
   bootstrap: async () => {
     const cached = loadCache() as any;
@@ -97,6 +117,7 @@ export const useAppStore = create<AppState>((set, get) => ({
         cities: cached.cities ?? [],
         categories: cached.categories ?? [],
         guests: cached.guests ?? [],
+        namesArray: get().updateNamesArray(cached.guests ?? []),
         checks: cached.checks ?? {},
         draft: cached.draft ?? { cityIds: [], categories: {} },
         applied: cached.applied ?? { cityIds: [], categories: {} },
@@ -117,10 +138,13 @@ export const useAppStore = create<AppState>((set, get) => ({
         checksMap[`${c.guest_id}:${c.category_id}`] = !!c.checked;
       }
 
+      const newNamesArray = get().updateNamesArray(data.guests);
+
       set({
         cities: data.cities,
         categories: data.categories,
         guests: data.guests,
+        namesArray: newNamesArray,
         checks: checksMap,
         isBootstrapped: true,
       });
@@ -130,6 +154,7 @@ export const useAppStore = create<AppState>((set, get) => ({
         categories: data.categories,
         guests: data.guests,
         checks: checksMap,
+        namesArray: newNamesArray,
         draft: get().draft,
         applied: get().applied,
       });
@@ -218,6 +243,7 @@ export const useAppStore = create<AppState>((set, get) => ({
       guests: get().guests,
       checks: get().checks,
       draft: get().draft,
+      namesArray: get().namesArray,
       applied: get().applied,
     });
 
@@ -244,6 +270,7 @@ export const useAppStore = create<AppState>((set, get) => ({
         categories: get().categories,
         guests: get().guests,
         checks: get().checks,
+        namesArray: get().namesArray,
         draft: get().draft,
         applied: get().applied,
       });
@@ -379,6 +406,7 @@ export const useAppStore = create<AppState>((set, get) => ({
       guests: get().guests,
       checks: get().checks,
       draft: get().draft,
+      namesArray: get().namesArray,
       applied: get().applied,
     });
 
@@ -404,6 +432,7 @@ export const useAppStore = create<AppState>((set, get) => ({
         cities: get().cities,
         categories: get().categories,
         guests: get().guests,
+        namesArray: get().namesArray,
         checks: get().checks,
         draft: get().draft,
         applied: get().applied,
@@ -498,10 +527,13 @@ export const useAppStore = create<AppState>((set, get) => ({
       city_id: cityId ?? null,
     };
     set({ guests: [temp, ...get().guests] });
+    const newNamesArray = get().updateNamesArray([temp, ...get().guests]);
+    set({ namesArray: newNamesArray });
     saveCache({
       cities: get().cities,
       categories: get().categories,
       guests: get().guests,
+      namesArray: newNamesArray,
       checks: get().checks,
       draft: get().draft,
       applied: get().applied,
@@ -528,6 +560,7 @@ export const useAppStore = create<AppState>((set, get) => ({
         categories: get().categories,
         guests: get().guests,
         checks: get().checks,
+        namesArray: get().namesArray,
         draft: get().draft,
         applied: get().applied,
       });
@@ -550,6 +583,7 @@ export const useAppStore = create<AppState>((set, get) => ({
       categories: get().categories,
       guests: get().guests,
       checks: get().checks,
+      namesArray: get().namesArray,
       draft: get().draft,
       applied: get().applied,
     });

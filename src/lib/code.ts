@@ -1,4 +1,4 @@
-const ALLOWED = "23456789ABCDEFGHJKMNPQRSTUVWXYZ"; // exclude 0,O,1,I
+const ALLOWED = "23456789ABCDEFGHJKMNPQRSTUVWXYZ"; // exclude 0,O,1,I,L
 
 export function generateCode(length = 6) {
   const n = Math.max(6, Math.min(8, length));
@@ -11,7 +11,7 @@ export function generateCode(length = 6) {
 
 export function normalizeCode(input: string | null | undefined) {
   if (!input) return "";
-  return String(input).toUpperCase().replace(/[^A-Z0-9]/g, "").replace(/[OI]/g, "");
+  return String(input).toUpperCase().replace(/[^A-Z0-9]/g, "").replace(/[OIL]/g, "");
 }
 
 export function isValidCode(code: string) {
