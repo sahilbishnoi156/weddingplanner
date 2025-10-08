@@ -40,6 +40,7 @@ export function AddGuestInput({
   const [pendingCity, setPendingCity] = React.useState<City | null>(null);
   const [open, setOpen] = React.useState(false);
   const [highlight, setHighlight] = React.useState(0);
+  const inputRef = React.useRef<null | HTMLInputElement>(null);
 
   const currentPartial = lastWord(value);
 
@@ -81,6 +82,33 @@ export function AddGuestInput({
     }
   };
 
+  React.useEffect(() => {
+  function handleKeydown(e: KeyboardEvent) {
+    // Only act if input is NOT focused and it's a character key
+    const isInputFocused = document.activeElement === inputRef.current;
+    // Allow only a-z, digits, and space/backspace
+    const isChar =
+      e.key.length === 1 &&
+      !e.ctrlKey &&
+      !e.metaKey &&
+      !e.altKey &&
+      /^[a-zA-Z0-9 ]$/.test(e.key);
+
+    if (!isInputFocused && isChar) {
+      if (inputRef.current) {
+        inputRef.current.focus();
+        // Optionally, insert the character at beginning of input
+        setValue((prev) => prev + e.key);
+        e.preventDefault();
+      }
+    }
+  }
+
+  window.addEventListener("keydown", handleKeydown);
+  return () => window.removeEventListener("keydown", handleKeydown);
+}, []);
+
+
   const createCityFromPartial = async () => {
     const name = currentPartial.trim();
     if (!name) return;
@@ -100,6 +128,7 @@ export function AddGuestInput({
     }
 
     if (e.key === "Tab") {
+      e.preventDefault();
       if (inlineSuggestion) {
         e.preventDefault();
         // complete the inline suggestion
@@ -150,6 +179,12 @@ export function AddGuestInput({
     setPendingCity(null);
   };
 
+  const capitalizeWords = (input: string) =>
+    input.replace(
+      /\b\w+/g,
+      (word) => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase()
+    );
+
   return (
     <div className="relative w-full md:max-w-xl">
       <div className="flex items-center gap-2">
@@ -158,12 +193,13 @@ export function AddGuestInput({
             <input
               type="text"
               className={cn(
-                "border-1 shadow-none focus-visible:ring-0 dark:bg-neutral-800 bg-neutral-200 w-full font-sans text-sm px-3 py-2 rounded-lg",
+                "border-1 shadow-none focus-visible:ring-0 dark:bg-neutral-800 bg-neutral-200 w-full font-sans text-sm px-3 py-2 rounded-lg"
                 // match all font and padding with overlay below!
               )}
+              ref={inputRef}
               placeholder="Add guest fast... type city then space to tag (e.g., “California John Doe”)"
               value={value}
-              onChange={(e) => setValue(e.target.value)}
+              onChange={(e) => setValue(capitalizeWords(e.target.value))}
               onKeyDown={onKeyDown}
               aria-label="Add guest"
               spellCheck={false}
