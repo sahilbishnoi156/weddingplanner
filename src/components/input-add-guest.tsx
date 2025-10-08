@@ -83,31 +83,39 @@ export function AddGuestInput({
   };
 
   React.useEffect(() => {
-  function handleKeydown(e: KeyboardEvent) {
-    // Only act if input is NOT focused and it's a character key
-    const isInputFocused = document.activeElement === inputRef.current;
-    // Allow only a-z, digits, and space/backspace
-    const isChar =
-      e.key.length === 1 &&
-      !e.ctrlKey &&
-      !e.metaKey &&
-      !e.altKey &&
-      /^[a-zA-Z0-9 ]$/.test(e.key);
+    function handleKeydown(e: KeyboardEvent) {
+      // Only act if input is NOT focused and it's a character key
+      const active = document.activeElement;
+      const isInputFocused = active === inputRef.current;
 
-    if (!isInputFocused && isChar) {
-      if (inputRef.current) {
-        inputRef.current.focus();
-        // Optionally, insert the character at beginning of input
-        setValue((prev) => prev + e.key);
-        e.preventDefault();
+      // If any input/textarea/contenteditable is focused, do nothing
+      if (
+        active &&
+        (active.tagName === "INPUT" || active.tagName === "TEXTAREA")
+      ) {
+        return;
+      }
+      // Allow only a-z, digits, and space/backspace
+      const isChar =
+        e.key.length === 1 &&
+        !e.ctrlKey &&
+        !e.metaKey &&
+        !e.altKey &&
+        /^[a-zA-Z0-9 ]$/.test(e.key);
+
+      if (!isInputFocused && isChar) {
+        if (inputRef.current) {
+          inputRef.current.focus();
+          // Optionally, insert the character at beginning of input
+          setValue((prev) => prev + e.key);
+          e.preventDefault();
+        }
       }
     }
-  }
 
-  window.addEventListener("keydown", handleKeydown);
-  return () => window.removeEventListener("keydown", handleKeydown);
-}, []);
-
+    window.addEventListener("keydown", handleKeydown);
+    return () => window.removeEventListener("keydown", handleKeydown);
+  }, []);
 
   const createCityFromPartial = async () => {
     const name = currentPartial.trim();

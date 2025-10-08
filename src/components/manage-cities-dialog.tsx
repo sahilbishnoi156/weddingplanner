@@ -22,6 +22,22 @@ export default function ManageCitiesDialog() {
   const [open, setOpen] = useState(false);
   const [editingId, setEditingId] = useState<number | null>(null);
   const [value, setValue] = useState("");
+  const [searchCity, setSearchCity] = useState("");
+
+  const [filteredCities, setFilteredCities] = useState(cities);
+
+  const filterCities = (search: string) => {
+    setSearchCity(search);
+    if (!search) {
+      setFilteredCities(cities);
+      return;
+    }
+    const lowerSearch = search.toLowerCase();
+    const filtered = cities.filter((c) =>
+      c.name.toLowerCase().includes(lowerSearch)
+    );
+    setFilteredCities(filtered);
+  }
 
   const startEdit = (id: number, name: string) => {
     setEditingId(id);
@@ -46,14 +62,22 @@ export default function ManageCitiesDialog() {
       <DialogTrigger asChild>
         <Button variant="outline">Manage Cities</Button>
       </DialogTrigger>
-      <DialogContent className="sm:max-w-lg">
+      <DialogContent className="sm:max-w-lg ">
         <DialogHeader>
           <DialogTitle>Manage Cities</DialogTitle>
         </DialogHeader>
         <div className="py-2 grid gap-2">
-          <div className="flex flex-col gap-2">
-            {cities.map((c) => (
-              <div key={c.id} className="flex items-center gap-2">
+          <div>
+            <Input
+              placeholder="Search City By Name..."
+              value={searchCity}
+              onChange={(e) => filterCities(e.target.value)}
+              className="mb-2"
+            />
+          </div>
+          <div className="flex flex-col gap-2 overflow-y-scroll h-[70vh]">
+            {filteredCities.map((c) => (
+              <div key={c.id} className="flex items-center gap-2 pr-1">
                 {editingId === c.id ? (
                   <>
                     <Input

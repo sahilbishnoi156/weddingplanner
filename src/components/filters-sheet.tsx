@@ -14,6 +14,7 @@ import {
 import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
 import { cn } from "@/lib/utils";
+import { Input } from "./ui/input";
 
 export function FiltersSheet() {
   const cities = useStore((s) => s.cities);
@@ -25,6 +26,22 @@ export function FiltersSheet() {
   const clearFilters = useStore((s) => s.clearFilters);
 
   const [open, setOpen] = useState(false);
+  const [searchCity, setSearchCity] = useState("");
+
+  const [filteredCities, setFilteredCities] = useState(cities);
+
+  const filterCities = (search: string) => {
+    setSearchCity(search);
+    if (!search) {
+      setFilteredCities(cities);
+      return;
+    }
+    const lowerSearch = search.toLowerCase();
+    const filtered = cities.filter((c) =>
+      c.name.toLowerCase().includes(lowerSearch)
+    );
+    setFilteredCities(filtered);
+  };
 
   const appliedCount = useMemo(() => {
     const cityCount = applied.cityIds.length;
@@ -48,12 +65,20 @@ export function FiltersSheet() {
         <SheetHeader>
           <SheetTitle>Filters</SheetTitle>
         </SheetHeader>
-        <div className="flex flex-col gap-6 p-4">
+        <div className="flex flex-col gap-6 p-4 overflow-y-auto">
           {cities?.length > 0 && (
-            <section>
-              <h4 className="text-sm font-medium mb-2">Cities</h4>
+            <section className="">
+              <h4 className="text-lg font-medium border-b mb-2">Cities</h4>
+              <div className="p-1">
+                <Input
+                  placeholder="Search City By Name..."
+                  value={searchCity}
+                  onChange={(e) => filterCities(e.target.value)}
+                  className="mb-2"
+                />
+              </div>
               <div className="grid grid-cols-2 gap-2">
-                {cities.map((c) => {
+                {filteredCities.map((c) => {
                   const checked = draft.cityIds.includes(c.id);
                   return (
                     <label
@@ -82,7 +107,7 @@ export function FiltersSheet() {
 
           {categories?.length > 0 && (
             <section>
-              <h4 className="text-sm font-medium mb-2">Columns</h4>
+              <h4 className="text-lg font-medium mb-2 border-b">Columns</h4>
               <div className="flex flex-col gap-3">
                 {categories.map((cat) => {
                   const value = draft.categories[cat.id] ?? "any";
